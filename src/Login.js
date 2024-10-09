@@ -1,107 +1,52 @@
-import logo from './logo.svg';
-import './App.css';
-import {useState} from "react"
-import {useEffect} from 'react'
-import {createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut} from 'firebase/auth'
-//onAuthStateChanged is trigered every time there is change in auth state
-//import {auth} from "./firebase-config"
-import { auth, db } from "./firebase-config"; // Import db from firebase config
-import { doc, setDoc } from "firebase/firestore"; // Import Firestore methods
+// Login.js
+import React, { useState, useEffect } from "react";
+import { signInWithEmailAndPassword, signOut, getAuth, onAuthStateChanged } from "firebase/auth";
 
+const auth = getAuth();
 
 function Login() {
+    const [loginEmail, setLoginEmail] = useState("");
+    const [loginPassword, setLoginPassword] = useState("");
 
-  //using "use state hooks" to get data from fields
-  
-  //registerEmail = email used to register account
-  //setRegisterEmail = set the email
-
-  //register the email and password and set them
-  const [registerEmail, setRegisterEmail] = useState("")
-  const [registerPassword, setRegisterPassword] = useState("")
-
-  //login the email and password and set them
-  const [loginEmail, setLoginEmail] = useState("")
-  const [loginPassword, setLoginPassword] = useState("")
-
-  //state for the current user so it persists across user sessions
-  const [user, setUser] = useState({});
-  /*onAuthStateChanged(auth, (currentUser) => {
-    setUser(currentUser);
-  })*/
-  
-  useEffect(() => {
-    onAuthStateChanged(auth, (currentUser) => {
-        setUser(currentUser);
-    });
-
-}, [])
-
-  //function to register, login, and logout are async await, because they deal with firebase stuff inside
-
-  //function to register user
-  const register = async () => {
-    try {
-        const userCredential = await createUserWithEmailAndPassword(auth, registerEmail, registerPassword);
-        const user = userCredential.user; // Get the user object which contains uid
-
-        // Add user to Firestore collection 'users' with user ID as document ID
-        await setDoc(doc(db, "users", user.uid), {
-            email: user.email,
-            uid: user.uid
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                console.log("User is signed in:", user.email);
+            } else {
+                console.log("User is signed out");
+            }
         });
 
-        console.log("User created:", user);
-    } catch (error) {
-        console.log(error.message);
-        alert(error.message);
-    }
-};
+        return () => unsubscribe();
+    }, []);
 
-  //function to login existing user
-  const login = async () => {
-    try {
-      const user = await signInWithEmailAndPassword(
-        auth,
-        loginEmail,
-        loginPassword
-      );
-      console.log(user); //user logged in
-      window.location.pathname = "/"; //go to the home page
-    } catch (error) {
-      console.log(error.message);
-      alert(error.message);
-    }
-  };
-  
-  //function to log user out of their account
-  const logout = async () => {
-    await signOut(auth);
-    window.location.pathname = "/"; //go to the homepage
-  };
+    // Function to login existing user
+    const login = async () => {
+        try {
+            await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+            console.log("User logged in");
+            window.location.pathname = "/"; // Redirect to homepage
+        } catch (error) {
+            console.log(error.message);
+            alert(error.message);
+        }
+    };
 
-  return (
-    <div className="App">
-      <div>
-        <h3>Registered User</h3>
-        <input placeholder = "Email..." onChange={(event) => {setRegisterEmail(event.target.value)}}></input>
-        <input placeholder = "Password..." onChange={(event) => {setRegisterPassword(event.target.value)}}></input>
-        <button onClick = {register}>Create User</button>
-      </div>
-      <div>
-        <h3>Login</h3>
-        <input placeholder = "Email..." onChange={(event) => {setLoginEmail(event.target.value)}}></input>
-        <input placeholder = "Password..." onChange={(event) => {setLoginPassword(event.target.value)}}></input>
-        <button onClick = {login}>Login</button>
-      </div>
-      
-      <h4>User Logged In: </h4>
-      {user ? user.email : "Not Logged In"}
-      <button onClick = {logout}>Sign Out</button>
-
-
-    </div>
-  );
+    return (
+        <div className="App">
+            <h3>Login</h3>
+            <input
+                placeholder="Email..."
+                onChange={(event) => { setLoginEmail(event.target.value); }}
+            />
+            <input
+                placeholder="Password..."
+                type="password"
+                onChange={(event) => { setLoginPassword(event.target.value); }}
+            />
+            <button onClick={login}>Login</button>
+        </div>
+    );
 }
 
 export default Login;
