@@ -4,7 +4,9 @@ import {useState} from "react"
 import {useEffect} from 'react'
 import {createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut} from 'firebase/auth'
 //onAuthStateChanged is trigered every time there is change in auth state
-import {auth} from "./firebase-config"
+//import {auth} from "./firebase-config"
+import { auth, db } from "./firebase-config"; // Import db from firebase config
+import { doc, setDoc } from "firebase/firestore"; // Import Firestore methods
 
 
 function Login() {
@@ -39,15 +41,22 @@ function Login() {
 
   //function to register user
   const register = async () => {
-    try{
-      const user = await createUserWithEmailAndPassword(auth, registerEmail, registerPassword)
-      console.log(user)
-    } catch(error){
-      console.log(error.message); //print error to console log
-      alert(error.message);
-    }
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, registerEmail, registerPassword);
+        const user = userCredential.user; // Get the user object which contains uid
 
-  };
+        // Add user to Firestore collection 'users' with user ID as document ID
+        await setDoc(doc(db, "users", user.uid), {
+            email: user.email,
+            uid: user.uid
+        });
+
+        console.log("User created:", user);
+    } catch (error) {
+        console.log(error.message);
+        alert(error.message);
+    }
+};
 
   //function to login existing user
   const login = async () => {
