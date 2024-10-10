@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import './App.css';
-import Register from './Register';
-import Login from './Login';
+import SignIn from './SignIn';
 import Home from './Home';
 
 function App() {
@@ -30,18 +29,14 @@ function App() {
             <nav>
                 <Link to="/">Home</Link>
                 {!user ? (
-                    <>
-                        <Link to="/login">Login</Link>
-                        <Link to="/register">Register</Link>
-                    </>
+                    <Link to="/signin">Sign In</Link>
                 ) : (
                     <button onClick={handleLogout}>Sign Out</button>
                 )}
             </nav>
             <Routes>
                 <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
+                <Route path="/signin" element={<SignIn />} />
             </Routes>
         </Router>
     );
